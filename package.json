@@ -1,0 +1,20 @@
+{
+  "name": "lookml-eav-transformer",
+  "version": "0.0.0",
+  "description": "Generates EAV LookML models by reading metadata embedded in LookML and blending it with EAV data via API",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "repository": "https://github.com/fabio-looker/lookml-eav-transformer.git",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dot": "^1.1.2",
+    "lookml-parser": "^3.1.0",
+    "minimist": "^1.2.0"
+  }
+}

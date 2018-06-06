@@ -1,0 +1,137 @@
+<<! let dialect={
+		redshift:{listAgg:'LISTAGG',concat:'||'},
+		postgres:{listAgg:'string_agg',concat:'||'}
+	}[x.dialect];
+>>
+#############################################################################################
+##
+##  Warning:  This file is programatically generated (Your changes will be overwritten)
+##  EAV Generator by Fabio 
+##  Generator v<<:x.generator.v>> (<<:x.generator.date>>)
+##  Generated on <<:(new Date()).toISOString().slice(0,10)>>
+##
+#############################################################################################
+<<* x.view :view:v>>
+explore: <<:view._view>>_attribute_data {hidden:yes}
+view: <<:view._view>>_attribute_data {
+	sql_table_name: <<:view.eav_attribute.sql_table>>;;
+	dimension: id {
+			label: "<<:x.attribute.label>> ID"
+			primary_key: yes
+			sql: <<:view.eav_attribute.sql_id>> ;;
+		}
+	dimension: id_string {
+			#Large numbers are not handled well by JSON.parse
+			hidden: yes
+			type:string
+			sql: CAST( ${id} AS varchar);;
+		}
+	dimension: name {
+		label: "<<:x.attribute.label>> Name"
+		sql: <<:view.eav_attribute.sql_name || view.eav_attribute.sql_id>>;;
+	}	
+	dimension: min_name {
+		hidden: yes
+		type: string
+		sql: MIN(${name});;
+	}
+	dimension: access_id {
+		hidden: yes
+		sql: <<:view.eav_attribute.sql_access_id || "NULL">>;;
+	}
+	dimension: access_name {
+		hidden: yes
+		sql: <<:view.eav_attribute.sql_access_name || "NULL">>;;
+	}
+	dimension: min_access_name {
+		hidden: yes
+		type: string
+		sql: MIN(${access_name});;
+	}
+}
+
+<<*>>
+
+view: <:x.eav.lName> {
+	sql_table_name: <:x.eav.sTable>;;
+	dimension: entity_id {
+		hidden: yes
+		sql: ${TABLE}.<:x.eav.eCol>;;
+	}
+	dimension: attribute_id {
+		hidden: yes
+		sql: ${TABLE}.<:x.eav.aCol>;;
+	}
+	<* x.eav.values :value:v>
+	dimension: v<:v> {
+		hidden:yes
+		sql: ${TABLE}.<:value.vCol>;;
+	}
+	<*>
+}
+
+
+#view: <:x.colsView.lName> {
+#	sql_table_name: (
+#			<* x.eav.values :value:v>
+#			<?v!=0>UNION ALL<?>
+#			SELECT CAST('v<:v>' as varchar(5)) as vcol
+#			<*>
+#		)
+#	;;
+#	dimension: value_column {
+#		type: string
+#		sql: ${TABLE}.vcol ;;
+#	}
+#}
+
+view: eav_base {
+	#Base view for all one_to_one and one_to_many EAV joins
+	extension:required
+
+	dimension: entity_id {
+		hidden: yes
+		sql: ${TABLE}.entity_id ;;
+	}
+	dimension: attribute {
+		hidden: yes
+		sql: ${TABLE}.attribute_id ;;
+	}
+}
+
+view: eav_direct {
+	extends: [eav_base]
+	extension:required
+	sql_table_name: <:x.eav.sTable> ;;
+	dimension: value {
+		hidden: yes
+		type: string
+		sql: ${TABLE}.<:value.vCol> ;;
+	}
+}
+view: eav_rollup {
+	extends: [eav_base]
+	extension: required
+	# sql_table_name: (
+	# 	SELECT <:x.eav.eCol>, <:x.eav.aCol>, <:dialect.listAgg>(<:value.vCol>,', ') as value_list, COUNT(<:value.vCol>) as value_count
+	# 	FROM <:x.eav.sTable>
+	# 	GROUP BY 1,2
+	# 	)
+	#;;
+	#dimension: id {
+	#	hidden:  yes
+	#	primary_key: yes
+	#	type: string
+	#	sql: CONCAT(${TABLE}.case_id, '|' , ${TABLE}.attribute);;
+	#}
+	dimension: value_list {
+		hidden:  yes
+		type: string
+		sql: ${TABLE}.value_list ;;
+	}
+	dimension: value_count {
+		hidden:  yes
+		type: number
+		sql: ${TABLE}.value_count ;;
+	}
+}
