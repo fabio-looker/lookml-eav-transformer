@@ -1,10 +1,10 @@
 view: user_attribute {
 	sql_table_name: user_attribute ;;
-	# EAV
-	#eav_attributes: {
-	#	sql_table: ${SQL_TABLE_NAME} ;;
-	#	sql_id: ${key} ;;
-	#	sql_name: ${key} ;;
+	#EAV
+	#eav: {
+	#	attribute_explore: user_attribute
+	#	attribute_id: user_attribute.key
+	#	attribute_name: user_attribute.key
 	#}
 	
 	

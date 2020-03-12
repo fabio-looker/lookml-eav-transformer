@@ -1,0 +1,82 @@
+
+	#######################################################################
+	##
+	##
+	##  <<:x.namespace>><<?x.namespace>>.<<?>>_stats.view.lkml 
+	##
+	##
+	#######################################################################
+	##  Warning:  This file is programatically generated (Your changes will be overwritten)
+	##  EAV Generator by Fabio http://rawgit.com/fabio-looker/eav-builder/master/index.html
+	##  Generator v<<:x.generator.v>> (<<:x.generator.date>>)
+	##  Generated on <<:(new Date()).toISOString().slice(0,10)>>
+	#######################################################################
+	include: "<<:x.namespace>><<?x.namespace>>.<<?>>_eav.view.lkml"
+	explore: <<:x.statView.lName>> {
+		# This lets us pull attribute metadata to easily fill out the rest of the form
+		hidden: yes
+		join: <<:x.colsView.lName>> {
+			type:left_outer
+			relationship: one_to_one #Really one_to_many, but dont want SymAggs
+			sql_on: 1=1 ;;
+		}
+		join: <<:x.attribute.lName>> {
+			type: left_outer
+			relationship: one_to_one #Really one_to_many, but dont want SymAggs
+			sql_on: ${<<:x.attribute.lName>>.id} = ${<<:x.statView.lName>>.attribute_id}  ;;
+		}
+		<<?x.oView>>
+		<<?x.attribute.oCol>>
+		join: <<:x.oView.lName>> {
+			type: left_outer
+			relationship: one_to_one
+			sql_on: ${<<:x.oView.lName>>.id} = ${<<:x.attribute.lName>>.owner_id};;
+		}
+		<<??>>
+		join: <<:x.entity.lName>> {
+			type: left_outer
+			relationship: one_to_one
+			sql_on: ${<<:x.entity.lName>>.id}=${<<:x.entity.lName>>.id};;		
+		}
+		join: <<:x.oView.lName>> {
+			type: left_outer
+			relationship: one_to_one
+			sql_on: ${<<:x.oView.lName>>.id} = ${<<:x.entity.lName>>.owner_id};;
+		}
+		<<?>>
+		<<?>>
+	}
+	
+	
+	view: <<:x.statView.lName>> {
+		extends:[<<:x.eav.lName>>]
+		label: "EAV Table Stats"
+		measure: eav_count{
+			label: "Count of records"
+			type: count
+		}
+		measure: distinct_e_count {
+			#For each a, if count(*) > count(distinct e) then one-to-many
+			label: "Count of distict entities"
+			type: count_distinct
+			sql: ${TABLE}.<<:x.eav.eCol>>;;
+		}
+		measure: cardinality {
+			type: string
+			sql: CASE WHEN ${eav_count} > ${distinct_e_count} THEN 'one_to_many' ELSE 'one_to_one' END;;
+		}
+		measure: is_populated {
+			type: string
+			label: "Is value column populated?"
+			required_fields: [<<:x.colsView.lName>>.value_column]
+			sql: CASE<<* x.eav.values :value:v>>
+					 WHEN ${<<:x.colsView.lName>>.value_column}='v<<:v>>'
+					 THEN CASE 
+					 		WHEN COUNT(${TABLE}.<<:value.vCol>>)>0
+					 		THEN 'true'
+					 		ELSE 'false'
+							END
+					<<*>>
+			END;;
+		}
+	}	
